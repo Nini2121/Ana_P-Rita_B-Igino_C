@@ -38,17 +38,9 @@ def main():
     upper_bound=np.array([max_B,max_G,max_R])
 
     # Giving different arrays to handle colour points of different colours
-    # bpoints = [deque(maxlen=1024)]
-    # gpoints = [deque(maxlen=1024)]
-    # rpoints = [deque(maxlen=1024)]
     bpoints = []
     gpoints = []
     rpoints = []
-
-    #assigning index values
-    # blue_index = 0
-    # green_index = 0
-    # red_index = 0
 
     thickness=1
 
@@ -65,8 +57,7 @@ def main():
     video_capture = cv2.VideoCapture(0)
 
     while True: 
-        
-        #k,frame,total_limits, vid_mask=cam_test(video_capture, max_B,min_B,max_G,min_G,max_R,min_R)
+    
         _, frame = video_capture.read()
         vid_thresh = frame.copy()
         vid_mask=cv2.inRange(vid_thresh,lower_bound, upper_bound)
