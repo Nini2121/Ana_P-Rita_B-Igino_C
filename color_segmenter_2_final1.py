@@ -98,7 +98,7 @@ def cam_test(video_capture, max_B,min_B,max_G,min_G,max_R,min_R):
     cv2.imshow('Original', frame)
     k=cv2.waitKey(1)
 
-    return k, frame, total_limits
+    return k, frame, total_limits, vid_mask
 
 
 
@@ -143,7 +143,7 @@ def main():
     else:
     
         while True:   
-            k,frame,total_limits=cam_test(video_capture, max_B,min_B,max_G,min_G,max_R,min_R)
+            k,frame,total_limits,vid_mask=cam_test(video_capture, max_B,min_B,max_G,min_G,max_R,min_R)
   
     #--------
     #Termination

@@ -4,9 +4,8 @@ import cv2
 from textwrap import indent
 import json
 import os
-from color_segmenter import *
+from color_segmenter_2_final1 import *
 from collections import deque
-
 
 #função para a definição dos limites do código e das condições iniciais
 def arg():
@@ -28,88 +27,101 @@ def main():
 
     if not os.path.exists(args["file"]):
         raise FileNotFoundError
-
-    limits_values = {}
-    with open(args['file'], 'r') as f:
-        limits_values = json.loads(f.readline())
+    else:
+        limits_values = {}
+        with open(args['file'], 'r') as f:
+            limits_values = json.loads(f.readline())
     
-    video_capture = cv2.VideoCapture(0)
-
-    # extract variables from the file 
-    
-    min_B=  limits_values['limits']['B']['min']
-    min_G = limits_values['limits']['G']['min']
-    min_R = limits_values['limits']['R']['min']
-    max_B = limits_values['limits']['B']['max']
-    max_G = limits_values['limits']['G']['max']
-    max_R = limits_values['limits']['R']['max']
     
 
-    # Giving different arrays to handle colour points of different colours
-    bpoints = [deque(maxlen=1024)]
-    gpoints = [deque(maxlen=1024)]
-    rpoints = [deque(maxlen=1024)]
-   
-
-    #assigning index values
-    blue_index = 0
-    green_index = 0
-    red_index = 0
-    thickness=1
-
-   
+        # extract variables from the file 
+    
+        min_B=  limits_values['limits']['B']['min']
+        min_G = limits_values['limits']['G']['min']
+        min_R = limits_values['limits']['R']['min']
+        max_B = limits_values['limits']['B']['max']
+        max_G = limits_values['limits']['G']['max']
+        max_R = limits_values['limits']['R']['max']
         
 
-    #starting the painting window setup
-    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 255, 255)]
-    colorIndex = 0
-    kernel = np.ones((5,5),np.uint8)
+        # Giving different arrays to handle colour points of different colours
+        bpoints = [deque(maxlen=1024)]
+        gpoints = [deque(maxlen=1024)]
+        rpoints = [deque(maxlen=1024)]
+    
 
-    paintWindow = np.zeros((471,636,3)) + 255
-    cv2.namedWindow('Paint', cv2.WINDOW_AUTOSIZE)
+        #assigning index values
+        blue_index = 0
+        green_index = 0
+        red_index = 0
+        thickness=1
 
     
+            
+
+        #starting the painting window setup
+        colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+        colorIndex = 0
+        
+        kernel = np.ones((10,10),np.uint8)
+
+        paintWindow = np.zeros((471,636,3)) + 255
+
+        center = None
+
+
+        cv2.namedWindow('Paint', cv2.WINDOW_AUTOSIZE)
+
+        
 
     
     #----------- starting to get the segmentation of the object 
-    if not os.path.exists(args["file"]):
-        raise FileNotFoundError
-    else:
+        video_capture = cv2.VideoCapture(0)
+  
         while True: 
-            k,frame,total_limits=cam_test(video_capture, max_B,min_B,max_G,min_G,max_R,min_R)
+            
+            k,frame,total_limits, vid_mask=cam_test(video_capture, max_B,min_B,max_G,min_G,max_R,min_R)
             #Flipping the frame just for convenience
             frame = cv2.flip(frame, 1)
 
-            pencil = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            #pencil = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
 
-
+            '''
             # Change the valeus through color segmenter program
             lower_bound = np.array([min_B,min_G,min_R])
             upper_bound = np.array([max_B,max_G,max_R])
 
 
+            '''
+            #Mask = cv2.inRange(pencil, lower_bound, upper_bound)
 
-            Mask = cv2.inRange(pencil, lower_bound, upper_bound)
-            Mask = cv2.erode(Mask, kernel, iterations=1)
+            #add some dialation to increase segmented area
+            #Mask = cv2.erode(vid_mask, kernel, iterations=1)
             Mask = cv2.morphologyEx(Mask, cv2.MORPH_OPEN, kernel)
             Mask = cv2.dilate(Mask, kernel, iterations=1)
-
-            cnts,_ = cv2.findContours(Mask.copy(), cv2.RETR_EXTERNAL,
-    	    cv2.CHAIN_APPROX_SIMPLE)
-            center = None
+            
+            #find all the contours of the segmented mask
+            cnts,_ = cv2.findContours(Mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+            
+            #checking if any countor is detected then ru the following statements
             if len(cnts) > 0:
                 # sorting the contours to find biggest contour
                 cnt = sorted(cnts, key = cv2.contourArea, reverse = True)[0]
+                
+                
                 # Get the radius of the enclosing circle around the found contour
                 ((x, y), radius) = cv2.minEnclosingCircle(cnt)
+                
+                
                 # Draw the circle around the contour
                 cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+                
                 # Calculating the center of the detected contour
                 M = cv2.moments(cnt)
                 center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
 
-                # Lacking: the code part were the keyboard change the color of the pencil!
+                
 
                 if k == 99:  # c clean the drawing
                     print('you pressed c')
@@ -154,7 +166,7 @@ def main():
                 rpoints.append(deque(maxlen=512))
                 red_index += 1
             
-            points = [bpoints, gpoints, rpoints, ypoints]
+            points = [bpoints, gpoints, rpoints]
             for i in range(len(points)):
                 for j in range(len(points[i])):
                     for k in range(1, len(points[i][j])):
