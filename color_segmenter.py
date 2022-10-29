@@ -1,3 +1,4 @@
+
 #library for the imagem processing
 import cv2
 
@@ -62,26 +63,43 @@ def onTrackbarmax_R(maxR):
 
 
   
-def cam_test(port: int = 0) -> None:
-    cap = cv2.VideoCapture(port)
-    if not cap.isOpened():  # Check if the web cam is opened correctly
-        print("failed to open cam")
-    else:
-        print('cam opened on port {}'.format(port))
+def cam_test(video_capture, max_B,min_B,max_G,min_G,max_R,min_R):
+    
+    # Capture frame-by-frame from the video - create one capture for the original frame and other for the mask
+    _, frame = video_capture.read()
+    
+    
+    #--------
+    #Processing 
+    #---------    
+    
+                #save the original to compare to the thresholded
 
-        for i in range(10 ** 10):
-            success, cv_frame = cap.read()
-            if not success:
-                print('failed to capture frame on iter {}'.format(i))
-                break
-            cv2.imshow('Input', cv_frame)
-            k = cv2.waitKey(1)
-            if k == ord('q'):
-                break
 
-        cap.release()
-        cv2.destroyAllWindows()
-    return
+    vid_thresh = frame.copy()
+    
+    #creates a dictionary for the max and min values chosen 
+    total_limits={'limits':{'B':{'max':max_B, 'min':min_B}, 'G':{'max':max_G, 'min':min_G}, 'R':{'max':max_R, 'min':min_R}}}
+    
+    #for the object's color segmentation we have to use the inRange function for the mask creation, so we can apply the segmentation
+    #with the maximum and minimum chosen we're using the num
+    
+    lower_bound=np.array([total_limits['limits']['B']['min'], total_limits['limits']['G']['min'],total_limits['limits']['R']['min']])
+    upper_bound=np.array([total_limits['limits']['B']['max'], total_limits['limits']['G']['max'],total_limits['limits']['R']['max']])
+    
+    #masking the image using in.range function
+    vid_mask=cv2.inRange(vid_thresh,lower_bound, upper_bound)
+    
+    
+    #--------
+    #Visualization 
+    #---------
+            
+    cv2.imshow('Mask', vid_mask)       
+    cv2.imshow('Original', frame)
+    k=cv2.waitKey(1)
+
+    return k, frame, total_limits, vid_mask
 
 
 
@@ -126,41 +144,11 @@ def main():
     else:
     
         while True:   
-        
-        # Capture frame-by-frame from the video - create one capture for the original frame and other for the mask
-            _, frame = video_capture.read()
-            
-    
-                #save the original to compare to the thresholded
-            
-            vid_thresh = frame.copy()
-
-            
-    
-        
-        #creates a dictionary for the max and min values chosen 
- 
-            total_limits={'limits':{'B':{'max':max_B, 'min':min_B}, 'G':{'max':max_G, 'min':min_G}, 'R':{'max':max_R, 'min':min_R}}}
-
+            k,frame,total_limits,vid_mask=cam_test(video_capture, max_B,min_B,max_G,min_G,max_R,min_R)
+  
     #--------
-    #Processing 
+    #Termination
     #---------
-        #for the object's color segmentation we have to use the inRange function for the mask creation, so we can apply the segmentation
-        #with the maximum and minimum chosen we're using the num
-            lower_bound=np.array([total_limits['limits']['B']['min'], total_limits['limits']['G']['min'],total_limits['limits']['R']['min']])
-            upper_bound=np.array([total_limits['limits']['B']['max'], total_limits['limits']['G']['max'],total_limits['limits']['R']['max']])
-        #masking the image using in.range function
-            vid_mask=cv2.inRange(vid_thresh,lower_bound, upper_bound)
-
-    #--------
-    #Visualization 
-    #---------
-            
-            cv2.imshow('Mask', vid_mask)
-            
-            cv2.imshow('Original', frame)
-            k=cv2.waitKey(1)
-           
 ##nao esta a funcionar bem 
             if k==ord('q'):
                 image_gray=cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -168,15 +156,11 @@ def main():
                 X = int(moment ["m10"] / moment["m00"])
                 Y = int(moment ["m01"] / moment["m00"])
                 cv2.putText(frame, 'The end of the program', (X,Y), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255), 2)
-
                 break
             elif k==ord('w'):
                 with open('limits.json', 'w') as arquivo:
                     arquivo.write(json.dumps(total_limits))
-            
-    
-    #--------
-    #Termination
-    #---------
+              
+  
 if __name__ == '__main__':
     main()
