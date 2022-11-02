@@ -14,19 +14,17 @@ from collections import deque
 def main():
     
     parser = argparse.ArgumentParser(description='PSR augmented reality paint') #creates a argumentParser object
-    parser.add_argument('-j','--json', default='limits.json', dest="file", type=str, action="store", help='Full path to json file') 
+    parser.add_argument('-j','--json', type=str, required = True, help='Full path to json file') 
+    parser.add_argument('-usp','--use_shake_prevention',action='store_true', help='To use shake prevention.')
     
-    args = parser.parse_args()
-    args = vars(args)
+    
+    args = vars(parser.parse_args())
 
-    if not os.path.exists(args["file"]):
-        raise FileNotFoundError
-        exit(0)
-    else:
-        limits_values = {}
-        with open(args['file'], 'r') as f:
-            limits_values = json.loads(f.readline())
-        print(limits_values)
+
+    limits_values = open(args['json'])
+    limits_values = json.load(limits_values)
+    
+
 
     # extract variables from the file 
     min_B=  limits_values['limits']['B']['min']
