@@ -19,12 +19,16 @@ def main():
     
     
     args = vars(parser.parse_args())
+    
+    #print com todos os comando possíveis para facilitar a utilização do programa ao utilizador
+    program_instructions()
+
 
 
     limits_values = open(args['json'])
     limits_values = json.load(limits_values)
     
-
+    paiting_images={'fish.jpg': 'fish.jpg','ice_cream.jpg': 'ice_cream.jpg'}
 
     # extract variables from the file 
     min_B=  limits_values['limits']['B']['min']
@@ -71,10 +75,9 @@ def main():
         vid_mask=cv2.inRange(vid_thresh,lower_bound, upper_bound)
         frame = cv2.flip(frame, 1)
 
-        #add some dialation to increase segmented area
-        Mask = cv2.erode(vid_mask, kernel, iterations=1)
-        Mask = cv2.morphologyEx(Mask, cv2.MORPH_OPEN, kernel)
-        Mask = cv2.dilate(Mask, kernel, iterations=1)
+        #Fuzzy detections that result in little blobs are cleared leaving only bigger objects detected
+        Mask, x, y= removeSmallComponents(vid_mask, 400)
+
         Mask = cv2.flip(Mask, 1)
         
         #find all the contours of the segmented mask
@@ -85,11 +88,9 @@ def main():
             # sorting the contours to find biggest contour
             cnt = sorted(cnts, key = cv2.contourArea, reverse = True)[0]
             
-            # Get the radius of the enclosing circle around the found contour
-            ((x, y), radius) = cv2.minEnclosingCircle(cnt)
-            
-            # Draw the circle around the contour
-            cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+            cv2.line(frame, (int(x) - 10, int(y) + 10), (int(x) + 10, int(y) - 10), (0, 0, 255), 5)
+            cv2.line(frame, (int(x) + 10, int(y) + 10), (int(x) - 10, int(y) - 10), (0, 0, 255), 5)
+
             
             # Calculating the center of the detected contour
             M = cv2.moments(cnt)
@@ -164,6 +165,9 @@ def main():
 
 
 
+        frame_from_tracking= copy.copy(frame)
+        video = frame.copy()
+        frame_from_tracking[(Mask == 255)] = (0, 0, 255)
 
         k=cv2.waitKey(1)
         if k == 99:  # c clean the drawing
@@ -184,6 +188,15 @@ def main():
         elif k == ord('r'):
             print('change color: red')
             colorIndex = 2
+        if k == ord('t'):
+            #select a random painting from the dictionaryq
+            path_to_image = random.choice(list(paiting_images.values()))
+            draw = cv2.imread(path_to_image)
+            cv2.imshow('DRAW', draw)
+            path_color = list(paiting_images.keys())[list(paiting_images.values()).index(path_to_image)]
+            print(path_color)
+            img_color = cv2.imread(path_color)    
+            
         #thickness
         elif k == ord('+'):
             print('thickness +')
