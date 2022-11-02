@@ -11,7 +11,7 @@ from color_segmenter import *
 from collections import deque
 from functions import *
 import copy
-
+import random
 
 def main():
     
@@ -79,8 +79,9 @@ def main():
 
         #Fuzzy detections that result in little blobs are cleared leaving only bigger objects detected
         Mask, x, y= removeSmallComponents(vid_mask, 400)
-
         Mask = cv2.flip(Mask, 1)
+    
+
         
         #find all the contours of the segmented mask
         cnts,_ = cv2.findContours(Mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
@@ -90,13 +91,16 @@ def main():
             # sorting the contours to find biggest contour
             cnt = sorted(cnts, key = cv2.contourArea, reverse = True)[0]
             
-            cv2.line(frame, (int(x) - 10, int(y) + 10), (int(x) + 10, int(y) - 10), (0, 0, 255), 5)
-            cv2.line(frame, (int(x) + 10, int(y) + 10), (int(x) - 10, int(y) - 10), (0, 0, 255), 5)
-
             
             # Calculating the center of the detected contour
             M = cv2.moments(cnt)
             center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
+            frame[(Mask== 255)] = (0, 255, 0)
+            
+            
+            cv2.line(frame, (int(center[0]) - 10, int(center[1]) + 10), (int(center[0]) + 10, int(center[1]) - 10), (0, 0, 255), 5)
+            cv2.line(frame, (int(center[0]) + 10, int(center[1]) + 10), (int(center[0]) - 10, int(center[1]) - 10), (0, 0, 255), 5)
+            
 
             rgb_points.append(center)
             #store for each point also the color and the thickness
@@ -165,11 +169,6 @@ def main():
                     color_points.pop(-1)
                     thick_points.pop(-1)
 
-
-
-        frame_from_tracking= copy.copy(frame)
-        video = frame.copy()
-        frame_from_tracking[(Mask == 255)] = (0, 0, 255)
 
         k=cv2.waitKey(1)
         if k == 99:  # c clean the drawing
@@ -260,3 +259,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
