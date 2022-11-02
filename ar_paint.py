@@ -11,7 +11,7 @@ from color_segmenter import *
 from collections import deque
 from functions import *
 import copy
-import random
+
 
 def main():
     
