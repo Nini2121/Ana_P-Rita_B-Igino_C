@@ -136,6 +136,11 @@ def main():
             # Calculating the center of the detected contour
             M = cv2.moments(cnt)
             center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
+            center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
+            frame[(Mask== 255)] = (0, 255, 0)
+            
+            cv2.line(frame, (int(center[0]) - 10, int(center[1]) + 10), (int(center[0]) + 10, int(center[1]) - 10), (0, 0, 255), 5)
+            cv2.line(frame, (int(center[0]) + 10, int(center[1]) + 10), (int(center[0]) - 10, int(center[1]) - 10), (0, 0, 255), 5)
             
             # Shake detection parameters
             
@@ -219,12 +224,6 @@ def main():
                     rgb_points.pop(-1) #avoid to draw line while drawing figure
                     color_points.pop(-1)
                     thick_points.pop(-1)
-
-
-
-        frame_from_tracking= copy.copy(frame)
-        video = frame.copy()
-        frame_from_tracking[(Mask == 255)] = (0, 0, 255)
 
         k=cv2.waitKey(1)
         if k == 99:  # c clean the drawing
