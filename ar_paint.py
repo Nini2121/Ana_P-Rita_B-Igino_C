@@ -11,6 +11,7 @@ from color_segmenter import *
 from collections import deque
 from functions import *
 import copy
+import random
 
 drawing = False
 first_mouse_point = (0,0)
