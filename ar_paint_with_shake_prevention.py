@@ -128,11 +128,7 @@ def main():
         if len(cnts) > 0:
             # sorting the contours to find biggest contour
             cnt = sorted(cnts, key = cv2.contourArea, reverse = True)[0]
-            
-            cv2.line(frame, (int(x) - 10, int(y) + 10), (int(x) + 10, int(y) - 10), (0, 0, 255), 5)
-            cv2.line(frame, (int(x) + 10, int(y) + 10), (int(x) - 10, int(y) - 10), (0, 0, 255), 5)
-
-            
+           
             # Calculating the center of the detected contour
             M = cv2.moments(cnt)
             center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
