@@ -40,9 +40,7 @@ def onMouse(event,x,y,flags,param):
         
 
 def distance(current_location, previous_location):
-    return int(math.sqrt(
-        math.pow(current_location[0] - previous_location[0], 2) + math.pow(current_location[1] - previous_location[1],
-                                                                           2)))                                                      
+    return int(math.sqrt(math.pow(current_location[0] - previous_location[0], 2) + math.pow(current_location[1] - previous_location[1],2)))                                                      
 
 def shake_prevention(x, y, past_x, past_y):
     # Distancia ponto atual ao ponto anterior
@@ -66,7 +64,7 @@ def main():
     parser.add_argument('-j','--json', type=str, required = True, help='Full path to json file') 
     parser.add_argument('-usp','--use_shake_prevention',action='store_true', help='To use shake prevention.')
     
-    
+
     args = vars(parser.parse_args())
     
     #print com todos os comando possíveis para facilitar a utilização do programa ao utilizador
@@ -115,6 +113,8 @@ def main():
     my_rect=[]
     my_circle=[]
 
+    painting_with_color=False
+
     video_capture = cv2.VideoCapture(0)
 
     while True: 
@@ -150,12 +150,6 @@ def main():
             
             mode = onModes(args['use_shake_prevention'])
             
-
-            rgb_points.append(center)
-            #store for each point also the color and the thickness
-            color_points.append(colorIndex)
-            thick_points.append(thickness)
-            
             # Shake detection parameters
             
             if past_x == 0 and past_y == 0:
@@ -168,7 +162,6 @@ def main():
                     cv2.setMouseCallback('Paint',onMouse)
 
             rgb_points.append(center)
-            #store for each point also the color and the thickness
             color_points.append(colorIndex)
             thick_points.append(thickness)
 
@@ -178,18 +171,21 @@ def main():
                 if square_mode == False and ellipse_mode == False:
                     paintWindow = np.zeros((471,636,3)) + 255
                     for k in range(1,len(rgb_points)-1):
-                        if max(abs(rgb_points[k-1][0]-rgb_points[k][0]),abs(rgb_points[k-1][1]-rgb_points[k][1])) > 30 : #if two points are too much distant is an error
-                            continue
+                        if args['use_shake_prevention'] is True:
+                            if max(abs(rgb_points[k-1][0]-rgb_points[k][0]),abs(rgb_points[k-1][1]-rgb_points[k][1])) > 30 : #if two points are too much distant is an error
+                                continue
                         cv2.line(paintWindow, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
-                        cv2.line(frame, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
+                        
+                        # painting with color
+                        if painting_with_color == True:
+                            cv2.line(draw, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
+
                     for k in my_rect:
                         cv2.rectangle(paintWindow, k[0], k[1], colors[k[2]], k[3])
-                        cv2.rectangle(frame, k[0], k[1], colors[k[2]], k[3])
+                        
                     for k in my_circle:
                         cv2.circle(paintWindow, k[0],k[1], colors[k[2]], k[3])
-                        cv2.circle(frame, k[0],k[1], colors[k[2]], k[3])
-                        
-                    cv2.imshow("Tracking", frame)
+
 
                 if square_mode == True:
                     paintWindow = np.zeros((471,636,3)) + 255
@@ -198,18 +194,12 @@ def main():
                             if max(abs(rgb_points[k-1][0]-rgb_points[k][0]),abs(rgb_points[k-1][1]-rgb_points[k][1])) > 30 : #if two points are too much distant is an error
                                 continue
                         cv2.line(paintWindow, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
-                        cv2.line(frame, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
+                        
                     for k in my_rect:
                         cv2.rectangle(paintWindow, k[0], k[1], colors[k[2]], k[3])
-                        cv2.rectangle(frame, k[0], k[1], colors[k[2]], k[3])
+                        
                     for k in my_circle:
                         cv2.circle(paintWindow, k[0],k[1],colors[k[2]], k[3])
-                        cv2.circle(frame, k[0],k[1], colors[k[2]], k[3])
-                        
-                    if len(rgb_points) > 2 :
-                        for k in range(1,len(mouse_points)-1):
-                            rgb_points
-                            cv2.line(paintWindow,rgb_points[k - 1] , mouse_points[k], (0,255,0), 2)
 
                     cv2.rectangle(paintWindow, actual_point, rgb_points[-1], colors[colorIndex], thickness)
                     cv2.rectangle(frame, actual_point, rgb_points[-1], colors[colorIndex], thickness)
@@ -219,21 +209,20 @@ def main():
                     color_points.pop(-1)
                     thick_points.pop(-1)
 
-                    cv2.imshow("Tracking", frame)
 
                 if ellipse_mode == True:
                     paintWindow = np.zeros((471,636,3)) + 255
                     for k in range(1,rgb_points.index(actual_point)):#redraw everything
-                        if max(abs(rgb_points[k-1][0]-rgb_points[k][0]),abs(rgb_points[k-1][1]-rgb_points[k][1])) > 30 : #if two points are too much distant is an error
-                            continue
+                        if args['use_shake_prevention'] is True:
+                            if max(abs(rgb_points[k-1][0]-rgb_points[k][0]),abs(rgb_points[k-1][1]-rgb_points[k][1])) > 30 : #if two points are too much distant is an error
+                                continue
                         cv2.line(paintWindow, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
-                        cv2.line(frame, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
+
                     for k in my_rect:
                         cv2.rectangle(paintWindow, k[0], k[1], colors[k[2]], k[3])
-                        cv2.rectangle(frame, k[0], k[1], colors[k[2]], k[3])
+
                     for k in my_circle:
                         cv2.circle(paintWindow, k[0],k[1], colors[k[2]], k[3])
-                        cv2.circle(frame, k[0],k[1], colors[k[2]], k[3])
 
                     radius= max(abs(actual_point[0]-rgb_points[-1][0]),abs(actual_point[1]-rgb_points[-1][1]))
                     cv2.circle(paintWindow, actual_point, radius, colors[colorIndex], thickness)
@@ -241,10 +230,23 @@ def main():
                     pt=(actual_point, radius, colorIndex, thickness)
                     last_point_circle.append(pt)
                     rgb_points.pop(-1) #avoid to draw line while drawing figure
+                    print(rgb_points[-1])
                     color_points.pop(-1)
                     thick_points.pop(-1)
 
-                    cv2.imshow("Tracking", frame)
+
+        #case in which you're not painting, we have to keep the picture on the frame 
+        for k in range(1,len(rgb_points)-1):
+            if args['use_shake_prevention'] is True:
+                if max(abs(rgb_points[k-1][0]-rgb_points[k][0]),abs(rgb_points[k-1][1]-rgb_points[k][1])) > 30 : #if two points are too much distant is an error
+                    continue
+            cv2.line(frame, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
+        for k in my_rect:
+            cv2.rectangle(frame, k[0], k[1], colors[k[2]], k[3])
+        for k in my_circle:
+            cv2.circle(frame, k[0],k[1], colors[k[2]], k[3])
+        cv2.imshow("Tracking", frame)
+
 
         k=cv2.waitKey(1)
         if k == 99:  # c clean the drawing
@@ -265,14 +267,18 @@ def main():
         elif k == ord('r'):
             print('change color: red')
             colorIndex = 2
-        if k == ord('t'):
+        elif k == ord('t'):
             #select a random painting from the dictionaryq
+            painting_with_color=True
             path_to_image = random.choice(list(paiting_images.values()))
             draw = cv2.imread(path_to_image)
-            cv2.imshow('DRAW', draw)
-            path_color = list(paiting_images.keys())[list(paiting_images.values()).index(path_to_image)]
-            print(path_color)
-            img_color = cv2.imread(path_color)    
+            cv2.imshow('draw', draw)
+            print('1: Green \n2: Red \n3: Blue')   
+
+        elif k == ord('f'):#finish painting with color
+            painting_with_color = False
+            #evaluation of the painting
+
             
         #thickness
         elif k == ord('+'):
@@ -332,6 +338,8 @@ def main():
         cv2.imshow("Tracking", frame)
         cv2.imshow("Paint", paintWindow)
         cv2.imshow("mask",Mask)
+        if painting_with_color == True:
+            cv2.imshow('draw',draw)
 
 if __name__ == '__main__':
     main()
