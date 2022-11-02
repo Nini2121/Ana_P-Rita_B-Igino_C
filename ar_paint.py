@@ -55,7 +55,7 @@ def main():
     kernel = np.ones((10,10),np.uint8)
 
     paintWindow = np.zeros((471,636,3)) + 255
-    paintWindow = cv2.flip(paintWindow, 1)
+    #paintWindow = cv2.flip(paintWindow, 1)
 
     center = None
 
@@ -109,17 +109,6 @@ def main():
 
             # draw stuff
             if len(rgb_points) > 2 :
-                # if square_mode == False and ellipse_mode == False:
-                #     p1=rgb_points[-2]
-                #     p2=rgb_points[-1]
-                #     #cv2.line(paintWindow,p1 ,p2 , colors[colorIndex], thickness)
-                # if square_mode == True:
-                #     cv2.rectangle(paintWindow, actual_point, rgb_points[-1], colors[colorIndex], thickness)
-                # if ellipse_mode == True:
-                #     radius= max(abs(actual_point[0]-rgb_points[-1][0]),abs(actual_point[1]-rgb_points[-1][1]))
-                #     cv2.circle(paintWindow, actual_point, radius, colors[colorIndex], thickness)
-                
-                #clean and draw every time the line, only if activated draw rect or circle
 
                 if square_mode == False and ellipse_mode == False:
                     paintWindow = np.zeros((471,636,3)) + 255
@@ -127,10 +116,15 @@ def main():
                         if max(abs(rgb_points[k-1][0]-rgb_points[k][0]),abs(rgb_points[k-1][1]-rgb_points[k][1])) > 30 : #if two points are too much distant is an error
                             continue
                         cv2.line(paintWindow, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
+                        cv2.line(frame, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
                     for k in my_rect:
                         cv2.rectangle(paintWindow, k[0], k[1], colors[k[2]], k[3])
+                        cv2.rectangle(frame, k[0], k[1], colors[k[2]], k[3])
                     for k in my_circle:
                         cv2.circle(paintWindow, k[0],k[1], colors[k[2]], k[3])
+                        cv2.circle(frame, k[0],k[1], colors[k[2]], k[3])
+                        
+                    cv2.imshow("Tracking", frame)
 
                 if square_mode == True:
                     paintWindow = np.zeros((471,636,3)) + 255
@@ -138,17 +132,23 @@ def main():
                         if max(abs(rgb_points[k-1][0]-rgb_points[k][0]),abs(rgb_points[k-1][1]-rgb_points[k][1])) > 30 : #if two points are too much distant is an error
                             continue
                         cv2.line(paintWindow, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
+                        cv2.line(frame, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
                     for k in my_rect:
                         cv2.rectangle(paintWindow, k[0], k[1], colors[k[2]], k[3])
+                        cv2.rectangle(frame, k[0], k[1], colors[k[2]], k[3])
                     for k in my_circle:
                         cv2.circle(paintWindow, k[0],k[1],colors[k[2]], k[3])
+                        cv2.circle(frame, k[0],k[1], colors[k[2]], k[3])
 
                     cv2.rectangle(paintWindow, actual_point, rgb_points[-1], colors[colorIndex], thickness)
+                    cv2.rectangle(frame, actual_point, rgb_points[-1], colors[colorIndex], thickness)
                     pt=(actual_point,rgb_points[-1], colorIndex, thickness)
                     last_point_rect.append(pt)
                     rgb_points.pop(-1) #avoid to draw line while drawing figure
                     color_points.pop(-1)
                     thick_points.pop(-1)
+
+                    cv2.imshow("Tracking", frame)
 
                 if ellipse_mode == True:
                     paintWindow = np.zeros((471,636,3)) + 255
@@ -156,19 +156,24 @@ def main():
                         if max(abs(rgb_points[k-1][0]-rgb_points[k][0]),abs(rgb_points[k-1][1]-rgb_points[k][1])) > 30 : #if two points are too much distant is an error
                             continue
                         cv2.line(paintWindow, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
+                        cv2.line(frame, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
                     for k in my_rect:
                         cv2.rectangle(paintWindow, k[0], k[1], colors[k[2]], k[3])
+                        cv2.rectangle(frame, k[0], k[1], colors[k[2]], k[3])
                     for k in my_circle:
                         cv2.circle(paintWindow, k[0],k[1], colors[k[2]], k[3])
+                        cv2.circle(frame, k[0],k[1], colors[k[2]], k[3])
 
                     radius= max(abs(actual_point[0]-rgb_points[-1][0]),abs(actual_point[1]-rgb_points[-1][1]))
                     cv2.circle(paintWindow, actual_point, radius, colors[colorIndex], thickness)
+                    cv2.circle(frame, actual_point, radius, colors[colorIndex], thickness)
                     pt=(actual_point, radius, colorIndex, thickness)
                     last_point_circle.append(pt)
                     rgb_points.pop(-1) #avoid to draw line while drawing figure
                     color_points.pop(-1)
                     thick_points.pop(-1)
 
+                    cv2.imshow("Tracking", frame)
 
         k=cv2.waitKey(1)
         if k == 99:  # c clean the drawing
