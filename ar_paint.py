@@ -9,6 +9,7 @@ import json
 import os
 from color_segmenter import *
 from collections import deque
+from functions import *
 
 
 def main():
