@@ -12,8 +12,54 @@ from collections import deque
 from functions import *
 import copy
 
+drawing = False
+first_mouse_point = (0,0)
+
+
+# To define shake detection mode
+def onModes(usp):
+    if usp == True:
+        return 'usp_mode'
+
+def onMouse(event,x,y,flags,param):
+
+    global  drawing
+    global rgb_points
+    global xm, xm
+    global mouse_start
+
+
+    if event == cv2.EVENT_LBUTTONDOWN:
+        cv2.circle(paintWindow,(int(x),int(y)),10,(0,0,255),-1)
+        xm = x
+        xm = y
+        k = 1
+        mouse_start = (xm,ym)
+        
+        
+
+def distance(current_location, previous_location):
+    return int(math.sqrt(
+        math.pow(current_location[0] - previous_location[0], 2) + math.pow(current_location[1] - previous_location[1],
+                                                                           2)))                                                      
+
+def shake_prevention(x, y, past_x, past_y):
+    # Distancia ponto atual ao ponto anterior
+    if past_x and past_y:
+        # Se a distancia for superior a 50 retorna que é necessário fazer shake prevention caso contrario retorna que não é necessário
+        if max(abs(past_x-x),abs(past_y-y))> 100:
+            return True
+        return False
 
 def main():
+    
+    global paintWindow, thickness
+    global rgb_points
+    global xm, ym
+
+    mouse_points = []
+
+    past_x, past_y = 0,0
     
     parser = argparse.ArgumentParser(description='PSR augmented reality paint') #creates a argumentParser object
     parser.add_argument('-j','--json', type=str, required = True, help='Full path to json file') 
@@ -101,6 +147,24 @@ def main():
             cv2.line(frame, (int(center[0]) - 10, int(center[1]) + 10), (int(center[0]) + 10, int(center[1]) - 10), (0, 0, 255), 5)
             cv2.line(frame, (int(center[0]) + 10, int(center[1]) + 10), (int(center[0]) - 10, int(center[1]) - 10), (0, 0, 255), 5)
             
+            mode = onModes(args['use_shake_prevention'])
+            
+
+            rgb_points.append(center)
+            #store for each point also the color and the thickness
+            color_points.append(colorIndex)
+            thick_points.append(thickness)
+            
+            # Shake detection parameters
+            
+            if past_x == 0 and past_y == 0:
+                past_x = center[0]
+                past_y = center[1]
+                
+            if args['use_shake_prevention'] is True:
+                shake_prevention(x, y, past_x, past_y)
+                if shake_prevention:
+                    cv2.setMouseCallback('Paint',onMouse)
 
             rgb_points.append(center)
             #store for each point also the color and the thickness
@@ -129,8 +193,9 @@ def main():
                 if square_mode == True:
                     paintWindow = np.zeros((471,636,3)) + 255
                     for k in range(1,rgb_points.index(actual_point)):#redraw everything
-                        if max(abs(rgb_points[k-1][0]-rgb_points[k][0]),abs(rgb_points[k-1][1]-rgb_points[k][1])) > 30 : #if two points are too much distant is an error
-                            continue
+                        if args['use_shake_prevention'] is True:
+                            if max(abs(rgb_points[k-1][0]-rgb_points[k][0]),abs(rgb_points[k-1][1]-rgb_points[k][1])) > 30 : #if two points are too much distant is an error
+                                continue
                         cv2.line(paintWindow, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
                         cv2.line(frame, rgb_points[k - 1], rgb_points[k], colors[color_points[k]], thick_points[k])
                     for k in my_rect:
@@ -139,6 +204,11 @@ def main():
                     for k in my_circle:
                         cv2.circle(paintWindow, k[0],k[1],colors[k[2]], k[3])
                         cv2.circle(frame, k[0],k[1], colors[k[2]], k[3])
+                        
+                    if len(rgb_points) > 2 :
+                        for k in range(1,len(mouse_points)-1):
+                            rgb_points
+                            cv2.line(paintWindow,rgb_points[k - 1] , mouse_points[k], (0,255,0), 2)
 
                     cv2.rectangle(paintWindow, actual_point, rgb_points[-1], colors[colorIndex], thickness)
                     cv2.rectangle(frame, actual_point, rgb_points[-1], colors[colorIndex], thickness)
